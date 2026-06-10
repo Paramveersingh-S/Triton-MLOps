@@ -40,6 +40,7 @@ def test_fused_scale_mask_softmax():
     ref = F.softmax(x * scale + mask, dim=-1)
     # Import locally to avoid modifying the top level import for now
     from triton_ops.softmax.fused_softmax import fused_scale_mask_softmax
+    out = fused_scale_mask_softmax(x, mask, scale)
     assert torch.allclose(ref, out, atol=1e-5), "Fused scale+mask+softmax failed"
 
 def test_numerical_stability():

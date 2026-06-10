@@ -47,14 +47,18 @@ if __name__ == "__main__":
         # (prefix_len, new_tokens, heads, head_dim, batch_size)
         (1024,  128, 32, 128, 1),
         (2048,  256, 32, 128, 1),
-        (4096,  64,  32, 128, 4),
-        (8192,  32,  32, 128, 1),
+        (4096,  64,  32, 128, 1), # Changed B=4 to B=1 to avoid OOM
+        (6144,  32,  16, 128, 1), # Reduced P and H to avoid OOM
     ]
 
     print("Prefix P | New S | TTFT Standard | TTFT Prefix | Reduction")
     print("---------|-------|---------------|-------------|----------")
     for P, S, H, D, B in scenarios:
+        # Clear cache before each standard benchmark to help with OOM
+        torch.cuda.empty_cache()
         t_standard = measure_standard_attention(B, H, P+S, D)
+        
+        torch.cuda.empty_cache()
         t_prefix = measure_prefix_prefill(B, H, S, P, D)
         
         ttft_reduction = (t_standard - t_prefix) / t_standard * 100

@@ -4,12 +4,11 @@ import triton.language as tl
 
 @triton.autotune(
     configs=[
-        triton.Config({'BLOCK_N': 128}, num_warps=2),
-        triton.Config({'BLOCK_N': 256}, num_warps=4),
-        triton.Config({'BLOCK_N': 512}, num_warps=8),
-        triton.Config({'BLOCK_N': 1024}, num_warps=16),
-        triton.Config({'BLOCK_N': 2048}, num_warps=16),
-        triton.Config({'BLOCK_N': 4096}, num_warps=32),
+        triton.Config({}, num_warps=2),
+        triton.Config({}, num_warps=4),
+        triton.Config({}, num_warps=8),
+        triton.Config({}, num_warps=16),
+        triton.Config({}, num_warps=32),
     ],
     key=['N'],
 )
@@ -53,21 +52,23 @@ def fused_softmax(x: torch.Tensor) -> torch.Tensor:
     
     grid = (M, )
     
+    BLOCK_N = triton.next_power_of_2(N)
+    
     fused_softmax_kernel[grid](
         x_2d, y_2d,
         M, N,
         x_2d.stride(0),
+        BLOCK_N=BLOCK_N,
     )
     return y_2d.view(x.shape)
 
 @triton.autotune(
     configs=[
-        triton.Config({'BLOCK_N': 128}, num_warps=2),
-        triton.Config({'BLOCK_N': 256}, num_warps=4),
-        triton.Config({'BLOCK_N': 512}, num_warps=8),
-        triton.Config({'BLOCK_N': 1024}, num_warps=16),
-        triton.Config({'BLOCK_N': 2048}, num_warps=16),
-        triton.Config({'BLOCK_N': 4096}, num_warps=32),
+        triton.Config({}, num_warps=2),
+        triton.Config({}, num_warps=4),
+        triton.Config({}, num_warps=8),
+        triton.Config({}, num_warps=16),
+        triton.Config({}, num_warps=32),
     ],
     key=['N'],
 )
@@ -105,21 +106,22 @@ def fused_scale_mask_softmax(x: torch.Tensor, mask: torch.Tensor, scale: float) 
     y_2d = torch.empty_like(x_2d)
     
     grid = (M, )
+    BLOCK_N = triton.next_power_of_2(N)
     fused_scale_mask_softmax_kernel[grid](
         x_2d, mask_2d, y_2d,
         M, N, scale,
         x_2d.stride(0), mask_2d.stride(0) if mask_2d.size(0) > 1 else 0, y_2d.stride(0),
+        BLOCK_N=BLOCK_N,
     )
     return y_2d.view(x.shape)
 
 @triton.autotune(
     configs=[
-        triton.Config({'BLOCK_N': 128}, num_warps=2),
-        triton.Config({'BLOCK_N': 256}, num_warps=4),
-        triton.Config({'BLOCK_N': 512}, num_warps=8),
-        triton.Config({'BLOCK_N': 1024}, num_warps=16),
-        triton.Config({'BLOCK_N': 2048}, num_warps=16),
-        triton.Config({'BLOCK_N': 4096}, num_warps=32),
+        triton.Config({}, num_warps=2),
+        triton.Config({}, num_warps=4),
+        triton.Config({}, num_warps=8),
+        triton.Config({}, num_warps=16),
+        triton.Config({}, num_warps=32),
     ],
     key=['N'],
 )
@@ -150,9 +152,11 @@ def fused_softmax_backward(y: torch.Tensor, dy: torch.Tensor) -> torch.Tensor:
     dx_2d = torch.empty_like(y_2d)
 
     grid = (M, )
+    BLOCK_N = triton.next_power_of_2(N)
     fused_softmax_backward_kernel[grid](
         y_2d, dy_2d, dx_2d,
         M, N,
         y_2d.stride(0), dy_2d.stride(0), dx_2d.stride(0),
+        BLOCK_N=BLOCK_N,
     )
     return dx_2d.view(y.shape)
