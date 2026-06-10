@@ -9,6 +9,11 @@ def run_benchmarks():
     result = subprocess.run(['python', 'benchmarks/bench_prefix_prefill.py'], capture_output=True, text=True)
     print(result.stdout)
     
+    if result.returncode != 0:
+        print("Error running benchmarks! Here is the detailed error log:")
+        print(result.stderr)
+        return
+        
     lines = result.stdout.strip().split('\n')
     data = []
     
