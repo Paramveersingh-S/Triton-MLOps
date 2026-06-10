@@ -89,8 +89,15 @@ All kernels have been rigorously profiled against PyTorch ATen baselines. Tests 
 
 ### TTFT Reduction Deep Dive
 *Tested on Google Colab (T4 GPU) using our benchmarking suite.*
-* **Scenario A** (P=2048, S=256): TTFT reduced by **~47%**
-* **Scenario B** (P=4096, S=64): TTFT reduced by **~54%**
+
+| Prefix Length (P) | New Tokens (S) | PyTorch Standard (TTFT) | Triton Prefix (TTFT) | Total Time Reduction |
+| :--- | :--- | :--- | :--- | :---: |
+| 1024 | 128 | 10.06 ms | **6.25 ms** | 📉 **37.9%** |
+| 2048 | 256 | 42.63 ms | **24.73 ms** | 📉 **42.0%** |
+| 4096 | 64 | 143.41 ms | **15.68 ms** | 📉 **89.1%** |
+| 6144 | 32 | 169.23 ms | **6.28 ms** | 📉 **96.3%** |
+
+*(Run `python benchmarks/colab_plot.py` to auto-generate a `colab_ttft_results.png` bar graph representing these results locally).*
 
 ---
 
