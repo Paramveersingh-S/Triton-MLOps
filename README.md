@@ -97,7 +97,9 @@ All kernels have been rigorously profiled against PyTorch ATen baselines. Tests 
 | 4096 | 64 | 143.41 ms | **15.68 ms** | 📉 **89.1%** |
 | 6144 | 32 | 169.23 ms | **6.28 ms** | 📉 **96.3%** |
 
-*(Run `python benchmarks/colab_plot.py` to auto-generate a `colab_ttft_results.png` bar graph representing these results locally).*
+<div align="center">
+  <img src="benchmarks/colab_ttft_results.png" alt="TTFT Benchmark Reductions on Google Colab T4 GPU" width="800"/>
+</div>
 
 ---
 
