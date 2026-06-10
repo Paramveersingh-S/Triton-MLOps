@@ -111,3 +111,48 @@ def fused_scale_mask_softmax(x: torch.Tensor, mask: torch.Tensor, scale: float) 
         x_2d.stride(0), mask_2d.stride(0) if mask_2d.size(0) > 1 else 0, y_2d.stride(0),
     )
     return y_2d.view(x.shape)
+
+@triton.autotune(
+    configs=[
+        triton.Config({'BLOCK_N': 128}, num_warps=2),
+        triton.Config({'BLOCK_N': 256}, num_warps=4),
+        triton.Config({'BLOCK_N': 512}, num_warps=8),
+        triton.Config({'BLOCK_N': 1024}, num_warps=16),
+        triton.Config({'BLOCK_N': 2048}, num_warps=16),
+        triton.Config({'BLOCK_N': 4096}, num_warps=32),
+    ],
+    key=['N'],
+)
+@triton.jit
+def fused_softmax_backward_kernel(
+    y_ptr, dy_ptr, dx_ptr,
+    M, N, stride_y, stride_dy, stride_dx,
+    BLOCK_N: tl.constexpr,
+):
+    row_idx = tl.program_id(0)
+    col_offsets = tl.arange(0, BLOCK_N)
+    mask = col_offsets < N
+
+    y = tl.load(y_ptr + row_idx * stride_y + col_offsets, mask=mask, other=0.0)
+    dy = tl.load(dy_ptr + row_idx * stride_dy + col_offsets, mask=mask, other=0.0)
+
+    y_dy = y * dy
+    sum_y_dy = tl.sum(y_dy, axis=0)
+    
+    dx = y * (dy - sum_y_dy)
+
+    tl.store(dx_ptr + row_idx * stride_dx + col_offsets, dx, mask=mask)
+
+def fused_softmax_backward(y: torch.Tensor, dy: torch.Tensor) -> torch.Tensor:
+    y_2d = y.view(-1, y.shape[-1])
+    dy_2d = dy.view(-1, dy.shape[-1])
+    M, N = y_2d.shape
+    dx_2d = torch.empty_like(y_2d)
+
+    grid = (M, )
+    fused_softmax_backward_kernel[grid](
+        y_2d, dy_2d, dx_2d,
+        M, N,
+        y_2d.stride(0), dy_2d.stride(0), dx_2d.stride(0),
+    )
+    return dx_2d.view(y.shape)
