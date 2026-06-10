@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/openai/triton/main/docs/logo.png" width="200" alt="Triton Logo"/>
+  <img src="docs/triton_logo.png" width="200" alt="Triton Logo"/>
   <h1>🚀 Triton-Based Fused Operator Suite</h1>
   <p><em>Production-grade, highly-optimized fused GPU kernels for LLM Inference</em></p>
 
@@ -31,14 +31,14 @@ Standard PyTorch softmax performs up to 3 separate GMEM reads and 2 writes. Our 
 ```mermaid
 graph LR
     subgraph "PyTorch ATen (Naive)"
-    A1[Read X] --> A2[Compute Max] --> A3[Write Max]
-    A3 --> A4[Read Max/X] --> A5[Exp(X-Max)] --> A6[Write Exp]
-    A6 --> A7[Read Exp] --> A8[Sum & Div] --> A9[Write Out]
+    A1["Read X"] --> A2["Compute Max"] --> A3["Write Max"]
+    A3 --> A4["Read Max/X"] --> A5["Exp(X-Max)"] --> A6["Write Exp"]
+    A6 --> A7["Read Exp"] --> A8["Sum & Div"] --> A9["Write Out"]
     end
     
     subgraph "Triton Fused (Ours)"
-    B1[Read X] --> B2{SRAM: Max, Exp, Sum}
-    B2 --> B3[Write Out]
+    B1["Read X"] --> B2{"SRAM: Max, Exp, Sum"}
+    B2 --> B3["Write Out"]
     end
     
     style B1 fill:#85C1E9,stroke:#333,stroke-width:2px
@@ -54,10 +54,10 @@ In production LLM deployments, identical system prompts are shared across thousa
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Q as Query (New Tokens)
+    participant Q as Query
     participant SRAM as Triton SRAM
-    participant KVP as Prefix Cache (K/V)
-    participant KVN as New Tokens (K/V)
+    participant KVP as Prefix Cache
+    participant KVN as New Tokens
     
     Q->>SRAM: Load Query Blocks
     SRAM->>KVP: Phase 1: Attend to Prefix
