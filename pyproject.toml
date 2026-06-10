@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "triton_ops"
+version = "0.1.0"
+description = "Triton-Based Fused Operator Suite"
+authors = [
+    { name = "Paramveer Singh" }
+]
+dependencies = [
+    "torch>=2.0.0",
+    "triton>=2.1.0",
+    "pytest>=7.0.0",
+    "transformers"
+]
